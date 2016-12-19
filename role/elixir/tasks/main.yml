@@ -1,0 +1,30 @@
+---
+
+- name: check if elixir installed
+  shell: elixir -v
+  register: elixir_check
+  ignore_errors: true
+
+- name: download kiex for installing elixir
+  shell: curl -sSL https://raw.githubusercontent.com/taylor/kiex/master/install | bash -s
+  when: elixir_check|failed
+
+- name: add kiex to path(bin)
+  lineinfile: dest=~/.bashrc line="PATH=$PATH:~/.kiex/bin"
+  when: elixir_check|failed
+
+- name: add kiex to path(scripts)
+  lineinfile: dest=~/.bashrc line="test -s \"$HOME/.kiex/scripts/kiex\" && source \"$HOME/.kiex/scripts/kiex\""
+  when: elixir_check|failed
+
+- name: check if elixir {{ version }} installed
+  shell: /home/pi/.kiex/bin/kiex list | grep {{ version }}
+  register: elixir_version_check
+  ignore_errors: true
+
+- name: install elixir {{ version }}
+  shell: /home/pi/.kiex/bin/kiex install {{ version }}
+  when: elixir_version_check|failed
+
+- name: add kiex source elixir version to path
+  lineinfile: dest=~/.bashrc line="source $HOME/.kiex/elixirs/elixir-{{ version }}.env"

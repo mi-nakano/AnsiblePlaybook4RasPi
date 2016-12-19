@@ -1,0 +1,21 @@
+---
+
+- name: check if erlang installed
+  shell: which erl
+  register: erl_check
+  ignore_errors: true
+
+- apt_repository: repo='deb http://packages.erlang-solutions.com/debian wheezy contrib' state=present
+  when: erl_check|failed
+  become: yes
+
+- get_url: url="http://packages.erlang-solutions.com/debian/erlang_solutions.asc" dest=/home/pi/erlang_solutions.asc
+  when: erl_check|failed
+
+- shell: apt-key add /home/pi/erlang_solutions.asc && rm /home/pi/erlang_solutions.asc
+  become: yes
+  when: erl_check|failed
+
+- apt: name=erlang update_cache=yes
+  become: yes
+  when: erl_check|failed
